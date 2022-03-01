@@ -1,0 +1,3 @@
+v 1.0
+d Yan Bo Zeng, UCLA Anderson School of Management (yanbozeng2015@ucla.edu)
+p texresults2 A variant of texresults by Alvaro Carril
