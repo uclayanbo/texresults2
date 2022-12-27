@@ -82,14 +82,21 @@ if "`action'"=="update"{
 			loc toreplace = substr("`linetoreplace'", 14, .) //extract the substring that starts with the macro (but not the part with backslashes)
         }
         file read texresultsfile line
-        }
+    }
     file close texresultsfile
-	
-	loc usingpath : word 2 of `using'
-	tempfile tmptex
-	copy `usingpath' `tmptex', public text replace
-	loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
-	filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace	
+
+	if "`linetoreplace'" != "" { //if the line with the macro was found
+		loc usingpath : word 2 of `using'
+		tempfile tmptex
+		copy `usingpath' `tmptex', public text replace
+		loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
+		filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace
+	}
+	else { //did not find the line with macro -> append
+		file open texresultsfile `using', write append
+		file write texresultsfile "\newcommand{`texmacro'}{`output'`xspace'}" _n
+		file close texresultsfile
+	}
 }
 
 else {
