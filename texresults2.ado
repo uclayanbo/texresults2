@@ -71,12 +71,8 @@ else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
 
 ********************************************************************************
 *Create or modify macros file.
-tempfile tmptex
 
-loc usingpath : word 2 of `using'
-mac lis _usingpath
 if "`action'"=="update"{
-	copy `usingpath' `tmptex', public text replace
 	loc length_todetect = strlen("\newcommand{`texmacro'}{") // to identify the line the macro is on
     file open texresultsfile `using', read text
     file read texresultsfile line
@@ -88,6 +84,10 @@ if "`action'"=="update"{
         file read texresultsfile line
         }
     file close texresultsfile
+	
+	loc usingpath : word 2 of `using'
+	tempfile tmptex
+	copy `usingpath' `tmptex', public text replace
 	loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
 	filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace	
 }
