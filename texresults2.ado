@@ -75,24 +75,33 @@ else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
 if "`action'"=="update"{
 	loc length_todetect = strlen("\newcommand{`texmacro'}{") // to identify the line the macro is on
     file open texresultsfile `using', read text
-    file read texresultsfile line
+
+	tempfile tmptex
+    file open tmphandle using "`tmptex'", write text
+    
+	file read texresultsfile line
     while r(eof)==0 {
-        if substr(`"`line'"',1,`length_todetect')=="\newcommand{`texmacro'}{" {
+        if substr(`"`line'"',1,`length_todetect')=="\newcommand{`texmacro'}{" { //line contains the target macro
 			loc linetoreplace `line'
-			loc toreplace = substr("`linetoreplace'", 14, .) //extract the substring that starts with the macro (but not the part with backslashes)
+			loc toreplace = substr("`linetoreplace'", 14, .) //extract the second half of the command (contains the macro but not the backslashes)
+			if "`found'" == "" { //if we haven't yet found the target macro
+				file write tmphandle "`line'" _n
+			}
+			loc found = "yes"
         }
+		else {
+			file write tmphandle "`line'" _n
+		}
         file read texresultsfile line
     }
     file close texresultsfile
-
-	if "`linetoreplace'" != "" { //if the line with the macro was found
+	file close tmphandle
+	if "`linetoreplace'" != "" { //if the target macro was found
 		loc usingpath : word 2 of `using'
-		tempfile tmptex
-		copy `usingpath' `tmptex', public text replace
 		loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
 		filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace
 	}
-	else { //did not find the line with macro -> append
+	else { //did not find the target macro -> append
 		file open texresultsfile `using', write append
 		file write texresultsfile "\newcommand{`texmacro'}{`output'`xspace'}" _n
 		file close texresultsfile
