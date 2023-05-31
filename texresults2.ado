@@ -59,15 +59,17 @@ if !missing("`pvalue'") {
 }
 
 *Add unit zero if option is specified and result qualifies.
-if (!missing("`unitzero'") & abs(`result') < 1) {
-	if (`result' > 0) local result 0`result'
-	else local result = "-0"+"`=abs(`result')'"
+if !missing("`unitzero'") {
+	di "Note: the unitzero option is automatically applied and may be deprecated in future versions."
 }
 
 *Make the result a formatted string to avoid precision issues with rounding floats.
-local roundto = -log10(`round')
-local fmt : sprintf("%%.%df", `roundto')
-local result : display `fmt' `result'
+if `round' <= 0.1{
+	local roundto = -log10(`round')
+	if `roundto' == round(`roundto',1) {
+		local result : display %-9.`roundto'f `result'
+	}
+}
 
 *Add the $ signs if math mode is on. Suppress the # signs if math mode is off.
 if inlist("`mathmode'", "on", "ON", "On") local output "$`result'$"
