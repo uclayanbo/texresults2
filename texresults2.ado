@@ -64,6 +64,10 @@ if (!missing("`unitzero'") & abs(`result') < 1) {
 	else local result = "-0"+"`=abs(`result')'"
 }
 
+*Make the result a formatted string to avoid precision issues with rounding floats.
+local fmt : sprintf("%%.%df", `round')
+local result : display `fmt' `result'
+
 *Add the $ signs if math mode is on. Suppress the # signs if math mode is off.
 if inlist("`mathmode'", "on", "ON", "On") local output "$`result'$"
 else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
