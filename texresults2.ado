@@ -65,7 +65,8 @@ if (!missing("`unitzero'") & abs(`result') < 1) {
 }
 
 *Make the result a formatted string to avoid precision issues with rounding floats.
-local fmt : sprintf("%%.%df", `round')
+local roundto = -log10(`round')
+local fmt : sprintf("%%.%df", `roundto')
 local result : display `fmt' `result'
 
 *Add the $ signs if math mode is on. Suppress the # signs if math mode is off.
