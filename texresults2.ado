@@ -36,9 +36,6 @@ if `isalph' == 0 di as text `""`texmacro'" may not be a valid LaTeX macro name"'
 
 if !missing("`xspace'") local xspace = "\" + "`xspace'"
 
-// display "opcion: `xspace'"
-
-
 ********************************************************************************
 *Process and store [rounded] result.
 
@@ -70,16 +67,25 @@ if !missing("`unitzero'") {
 
 *Make the result a formatted string to avoid precision issues with rounding floats.
 if `round' <= 0.1{
-	local roundto = -log10(`round')
+	di "round: `round'"
+	di "rounding 0.1"
+	local roundto = round(-log10(`round'),1)
 	if `roundto' == round(`roundto',1) {
-		local result : display %-9.`roundto'f `result'
+		local result : display %9.`roundto'g `result'
 	}
+}
+
+*Strip whitespace
+loc result: subinstr loc result " " "", all
+
+*Apply unitzero automatically
+if substr("`result'", 1, 1) == "."{
+	loc result = "0" + "`result'" 
 }
 
 *Add the $ signs if math mode is on. Suppress the # signs if math mode is off.
 if inlist("`mathmode'", "on", "ON", "On") local output "$`result'$"
 else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
-
 
 ********************************************************************************
 *Create or modify macros file.
