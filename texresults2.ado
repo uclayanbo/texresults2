@@ -24,6 +24,11 @@ if `len_action'>1 {
 	di as error "Specify only one of {bf:replace}, {bf:append}, and {bf:update}"
 	exit 198
 }
+
+loc checkmacrostart= substr("`texmacro'",1,3)
+if "`checkmacrostart'"=="end" di as text `"Macros may not start with "end""' //latex macros can't start with "end"
+// TODO: check all the banned words
+
 *Add backslash to macroname and issue warning if doesn't contain only alph.
 local isalph = regexm("`texmacro'","^[a-zA-Z ]*$")
 local texmacro = "\" + "`texmacro'"
