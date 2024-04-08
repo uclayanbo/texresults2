@@ -94,7 +94,15 @@ else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
 *Create or modify macros file.
 
 if "`action'"=="update"{
+	loc usingpath : word 2 of `using'
 	loc length_todetect = strlen("\newcommand{`texmacro'}{") // to identify the line the macro is on
+	
+	// if file doesn't exist, create it
+	if !fileexists("`usingpath'") {
+		di "Creating new file: `usingpath'"
+		file open texresultsfile `using', write
+		file close texresultsfile
+	}
 	file open texresultsfile `using', read text
 
 	tempfile tmptex
@@ -118,7 +126,6 @@ if "`action'"=="update"{
 	file close texresultsfile
 	file close tmphandle
 	if "`linetoreplace'" != "" { //if the target macro was found
-		loc usingpath : word 2 of `using'
 		loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
 		
 		// grab the permissions and group of `usingpath' so it's not overwritten
