@@ -2,7 +2,6 @@
 This do-file defines "texresults2", a variant of "texresults" (Alvaro Carril) that
 has an option to suppress the $ signs.
 */
-
 program define texresults2
 syntax [using], ///
 	TEXmacro(string) ///
@@ -67,8 +66,6 @@ if !missing("`unitzero'") {
 
 *Make the result a formatted string to avoid precision issues with rounding floats.
 if `round' <= 0.1{
-	di "round: `round'"
-	di "rounding 0.1"
 	local roundto = round(-log10(`round'),1)
 	if `roundto' == round(`roundto',1) {
 		local result : display %9.`roundto'g `result'
@@ -78,9 +75,15 @@ if `round' <= 0.1{
 *Strip whitespace
 loc result: subinstr loc result " " "", all
 
-*Apply unitzero automatically
+*Apply unitzero automatically 
+* if it's positive...
 if substr("`result'", 1, 1) == "."{
 	loc result = "0" + "`result'" 
+}
+* ...and if it's negative
+if substr("`result'", 1, 2) == "-."{
+	loc resultsubstr = substr("`result'", 2, .)
+	loc result = "-0" + "`resultsubstr'" 
 }
 
 *Add the $ signs if math mode is on. Suppress the # signs if math mode is off.
@@ -92,32 +95,45 @@ else if inlist("`mathmode'", "off", "OFF", "Off") local output "`result'"
 
 if "`action'"=="update"{
 	loc length_todetect = strlen("\newcommand{`texmacro'}{") // to identify the line the macro is on
-    file open texresultsfile `using', read text
+	file open texresultsfile `using', read text
 
 	tempfile tmptex
-    file open tmphandle using "`tmptex'", write text
-    
+	file open tmphandle using "`tmptex'", write text
+	
 	file read texresultsfile line
-    while r(eof)==0 {
-        if substr(`"`line'"',1,`length_todetect')=="\newcommand{`texmacro'}{" { //line contains the target macro
+	while r(eof)==0 {
+		if substr(`"`line'"',1,`length_todetect')=="\newcommand{`texmacro'}{" { //line contains the target macro
 			loc linetoreplace `line'
 			loc toreplace = substr("`linetoreplace'", 14, .) //extract the second half of the command (contains the macro but not the backslashes)
 			if "`found'" == "" { //if we haven't yet found the target macro
 				file write tmphandle "`line'" _n
 			}
 			loc found = "yes"
-        }
+		}
 		else {
 			file write tmphandle "`line'" _n
 		}
-        file read texresultsfile line
-    }
-    file close texresultsfile
+		file read texresultsfile line
+	}
+	file close texresultsfile
 	file close tmphandle
 	if "`linetoreplace'" != "" { //if the target macro was found
 		loc usingpath : word 2 of `using'
 		loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
+		
+		// grab the permissions and group of `usingpath' so we can restore them after writing
+		shell stat -c '%a' `usingpath' > temp_permissions.txt
+		file open fp using temp_permissions.txt, read text
+		file read fp permissions
+		file close fp
+		shell stat -c '%G' `usingpath' > temp_groupname.txt
+		file open fp using temp_groupname.txt, read text
+		file read fp group
+		file close fp
+
 		filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace
+		shell chmod `permissions' `usingpath'
+		shell chgrp `group' `usingpath'
 	}
 	else { //did not find the target macro -> append
 		file open texresultsfile `using', write append
