@@ -149,9 +149,37 @@ if "`action'"=="update"{
 		file close texresultsfile
 	}
 }
+else if "`action'"=="replace"{
+	loc usingpath : word 2 of `using'
+	
+	if fileexists("`usingpath'") loc fileexists "yes"
+	else loc fileexists "no"
+	
+	if "`fileexists'"=="yes"{
+		// instead of `file open ... replace`, keep the permissions if file exists
+		// grab the permissions and group of `usingpath' so it's not overwritten
+		shell stat -c '%a' `usingpath' > temp_permissions.txt
+		file open fp using temp_permissions.txt, read text
+		file read fp permissions
+		file close fp
+		shell stat -c '%G' `usingpath' > temp_groupname.txt
+		file open fp using temp_groupname.txt, read text
+		file read fp group
+		file close fp
+	}
 
-else {
-	file open texresultsfile `using', write `action'
+	file open texresultsfile `using', write replace
+	file write texresultsfile "\newcommand{`texmacro'}{`output'`xspace'}" _n
+	file close texresultsfile
+	
+	if "`fileexists'"=="yes"{
+		shell chmod `permissions' `usingpath'
+		shell chgrp `group' `usingpath'
+		shell rm temp_permissions.txt temp_groupname.txt
+	}
+}
+else if "`action'"=="append"{
+	file open texresultsfile `using', write append
 	file write texresultsfile "\newcommand{`texmacro'}{`output'`xspace'}" _n
 	file close texresultsfile
 }
