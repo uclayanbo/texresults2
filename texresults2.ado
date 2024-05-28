@@ -129,18 +129,18 @@ if "`action'"=="update"{
 		loc outpt = substr("`texmacro'}{`output'`xspace'}", 2, .) //remove leading backslash
 		
 		// grab the permissions and group of `usingpath' so it's not overwritten
-		shell stat -c '%a' `usingpath' > temp_permissions.txt
+		shell stat -c '%a' "`usingpath'" > temp_permissions.txt
 		file open fp using temp_permissions.txt, read text
 		file read fp permissions
 		file close fp
-		shell stat -c '%G' `usingpath' > temp_groupname.txt
+		shell stat -c '%G' "`usingpath'" > temp_groupname.txt
 		file open fp using temp_groupname.txt, read text
 		file read fp group
 		file close fp
 
-		filefilter `tmptex' `usingpath', from("`toreplace'") to(`outpt') replace
-		shell chmod `permissions' `usingpath'
-		shell chgrp `group' `usingpath'
+		filefilter `tmptex' "`usingpath'", from("`toreplace'") to(`outpt') replace
+		shell chmod `permissions' "`usingpath'"
+		shell chgrp `group' "`usingpath'"
 		shell rm temp_permissions.txt temp_groupname.txt
 	}
 	else { //did not find the target macro -> append
@@ -158,11 +158,11 @@ else if "`action'"=="replace"{
 	if "`fileexists'"=="yes"{
 		// instead of `file open ... replace`, keep the permissions if file exists
 		// grab the permissions and group of `usingpath' so it's not overwritten
-		shell stat -c '%a' `usingpath' > temp_permissions.txt
+		shell stat -c '%a' "`usingpath'" > temp_permissions.txt
 		file open fp using temp_permissions.txt, read text
 		file read fp permissions
 		file close fp
-		shell stat -c '%G' `usingpath' > temp_groupname.txt
+		shell stat -c '%G' "`usingpath'" > temp_groupname.txt
 		file open fp using temp_groupname.txt, read text
 		file read fp group
 		file close fp
@@ -173,8 +173,8 @@ else if "`action'"=="replace"{
 	file close texresultsfile
 	
 	if "`fileexists'"=="yes"{
-		shell chmod `permissions' `usingpath'
-		shell chgrp `group' `usingpath'
+		shell chmod `permissions' "`usingpath'"
+		shell chgrp `group' "`usingpath'"
 		shell rm temp_permissions.txt temp_groupname.txt
 	}
 }
